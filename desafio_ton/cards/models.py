@@ -14,6 +14,8 @@ class Card(models.Model):
     user_name = models.CharField(verbose_name=_('user name'), max_length=100)
     cvv = models.CharField(max_length=4)
     limit = models.FloatField(verbose_name=_('limit'), default=0.0)
+    available_credit = models.FloatField(
+        verbose_name=_('available credit'), default=0.0)
     wallet = models.ForeignKey(
         Wallet, null=True, blank=True, default=None, related_name='cards', on_delete=models.PROTECT)
 
