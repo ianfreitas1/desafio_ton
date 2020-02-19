@@ -1,0 +1,1 @@
+    web: gunicorn desafio_ton.wsgi --log-file -
