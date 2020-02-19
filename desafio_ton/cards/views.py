@@ -19,7 +19,7 @@ class CardView(APIView):
 
     def post(self, request):
         data = request.data
-        data['user'] = request.user
+        data['user'] = request.user.id
 
         serializer = CardSerializer(data=data)
 
