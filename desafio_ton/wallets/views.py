@@ -16,6 +16,8 @@ class WalletView(APIView):
 
     def post(self, request):
         """Método POST para criar uma wallet."""
+        if Wallet.objects.filter(user=self.request.user).exists():
+            return Response({'detail': _('User already has a wallet.')}, status=status.HTTP_400_BAD_REQUEST)
 
         data = request.data
         data['user'] = request.user.id
@@ -29,7 +31,7 @@ class WalletView(APIView):
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
 
             except:
-                return Response(_('Failed to create wallet.'), status=status.HTTP_400_BAD_REQUEST)
+                return Response({'detail': _('Failed to create wallet.')}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -57,7 +59,7 @@ class WalletDetailView(APIView):
                 return Response(serializer.data, status=status.HTTP_200_OK)
 
             except:
-                return Response(_('Failed to edit card.'), status=status.HTTP_400_BAD_REQUEST)
+                return Response({'detail': _('Failed to edit card.')}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -97,7 +99,7 @@ class WalletCardsView(APIView):
 
         card.save()
 
-        return Response(_('Added card to wallet.', status=status.HTTP_201_CREATED))
+        return Response({'detail': _('Added card to wallet.')}, status=status.HTTP_201_CREATED)
 
     def delete(self, request, walled_id):
         """Método DELETE para remover um cartão da wallet."""
@@ -112,4 +114,4 @@ class WalletCardsView(APIView):
 
         card.save()
 
-        return Response(_('Removed card from wallet.', status=status.HTTP_200_OK))
+        return Response({'detail': _('Removed card from wallet.')}, status=status.HTTP_200_OK)
