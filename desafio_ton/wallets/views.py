@@ -46,12 +46,22 @@ class WalletDetailView(APIView):
 
         return Response(serializer.data)
 
-    def put(self, request, wallet_id):
-        """Método PUT para alterar o limite de uma wallet."""
+    def patch(self, request, wallet_id):
+        """Método PATCH para alterar o limite de uma wallet."""
+        limit = request.data['limit']
 
         wallet = get_object_or_404(Wallet, id=wallet_id)
 
-        serializer = WalletSerializer(wallet, data=request.data)
+        serializer = WalletSerializer(wallet)
+
+        max_limit = serializer.data['max_limit']
+
+        if limit > max_limit:
+            return Response({'detail': _('Requested limit is over maximum permitted.')},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = WalletSerializer(
+            wallet, data={'limit': limit}, partial=True)
 
         if serializer.is_valid():
             try:
