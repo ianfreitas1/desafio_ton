@@ -45,9 +45,19 @@ class CardDetailView(APIView):
         return Response(serializer.data)
 
     def put(self, request, card_id):
+        data = request.data
+
         card = get_object_or_404(Card, id=card_id)
 
-        serializer = CardSerializer(card, data=request.data)
+        old_limit = card.limit
+        new_limit = data['limit']
+
+        if new_limit < old_limit:
+            card.wallet.limit -= (old_limit - new_limit)
+            card.wallet.save()
+
+        data['user'] = request.user.id
+        serializer = CardSerializer(card, data=data)
 
         if serializer.is_valid():
             try:
