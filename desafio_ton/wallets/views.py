@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 from .models import Wallet
 from .serializers import WalletSerializer
 
+from desafio_ton.cards.models import Card
 from desafio_ton.cards.serializers import CardSerializer
 
 
@@ -68,6 +69,12 @@ class WalletDetailView(APIView):
 
         wallet = get_object_or_404(Wallet, id=wallet_id)
 
+        wallet_cards = wallet.cards.all()
+
+        for card in wallet_cards:
+            card.wallet = None
+            card.save()
+
         wallet.delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -93,7 +100,7 @@ class WalletCardsView(APIView):
 
         card_id = request.data['card_id']
 
-        card = wallet.cards.get(id=card_id)
+        card = Card.objects.get(id=card_id)
 
         card.wallet = wallet
 
@@ -101,14 +108,14 @@ class WalletCardsView(APIView):
 
         return Response({'detail': _('Added card to wallet.')}, status=status.HTTP_201_CREATED)
 
-    def delete(self, request, walled_id):
+    def delete(self, request, wallet_id):
         """Método DELETE para remover um cartão da wallet."""
 
-        wallet = get_object_or_404(Wallet, id=walled_id)
+        wallet = get_object_or_404(Wallet, id=wallet_id)
 
         card_id = request.data['card_id']
 
-        card = wallet.cards.get(id=card_id)
+        card = Card.objects.get(id=card_id)
 
         card.wallet = None
 
