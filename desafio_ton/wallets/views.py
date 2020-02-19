@@ -131,4 +131,12 @@ class WalletCardsView(APIView):
 
         card.save()
 
+        serializer = WalletSerializer(wallet)
+
+        max_limit = serializer.data['max_limit']
+
+        if wallet.limit > max_limit:
+            wallet.limit = max_limit
+            wallet.save()
+
         return Response({'detail': _('Removed card from wallet.')}, status=status.HTTP_200_OK)
