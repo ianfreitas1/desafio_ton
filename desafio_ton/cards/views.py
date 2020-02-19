@@ -63,6 +63,10 @@ class CardDetailView(APIView):
     def delete(self, request, card_id):
         card = get_object_or_404(Card, id=card_id)
 
+        if card.wallet is not None:
+            card.wallet.limit -= card.limit
+            card.wallet.save()
+
         card.delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
