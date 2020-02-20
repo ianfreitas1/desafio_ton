@@ -2,6 +2,11 @@
 
 A API está hospedada no Heroku na seguinte URL: https://desafio-ton-ian.herokuapp.com/
 
+Pode ser feito o login com o superusuário já criado:
+
+Usuário: desafio
+Senha: desafio
+
 Documentação da API: todo
 
 # Configurações para desenvolvimento
