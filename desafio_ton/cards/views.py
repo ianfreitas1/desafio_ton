@@ -1,10 +1,11 @@
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import Card
+from .permissions import CardPermission
 from .serializers import CardSerializer
 
 
@@ -40,11 +41,17 @@ class CardView(APIView):
 
 
 class CardDetailView(APIView):
+    permission_classes = [IsAuthenticated & CardPermission]
+
+    def get_object(self, card_id):
+        card = get_object_or_404(Card, id=card_id)
+        self.check_object_permissions(self.request, card)
+        return card
 
     def get(self, request, card_id):
         """Método GET para obter os detalhes de um cartão."""
 
-        card = get_object_or_404(Card, id=card_id)
+        card = self.get_object(card_id)
 
         serializer = CardSerializer(card)
 
@@ -55,7 +62,7 @@ class CardDetailView(APIView):
 
         data = request.data
 
-        card = get_object_or_404(Card, id=card_id)
+        card = self.get_object(card_id)
 
         old_limit = card.limit
         new_limit = data['limit']
@@ -81,7 +88,7 @@ class CardDetailView(APIView):
     def delete(self, request, card_id):
         """Método DELETE para deletar um cartão."""
 
-        card = get_object_or_404(Card, id=card_id)
+        card = self.get_object(card_id)
 
         if card.wallet is not None:
             card.wallet.limit -= card.limit
@@ -94,7 +101,7 @@ class CardDetailView(APIView):
     def post(self, request, card_id):
         """Método POST para pagar uma conta e liberar crédito."""
 
-        card = get_object_or_404(Card, id=card_id)
+        card = self.get_object(card_id)
 
         payment_value = request.data['payment_value']
 

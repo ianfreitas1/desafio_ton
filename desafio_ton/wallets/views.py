@@ -2,11 +2,12 @@ from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Wallet
+from .permissions import WalletPermission
 from .serializers import WalletSerializer
 
 from desafio_ton.cards.models import Card
@@ -38,9 +39,15 @@ class WalletView(APIView):
 
 
 class WalletDetailView(APIView):
+    permission_classes = [IsAuthenticated & WalletPermission]
+
+    def get_object(self, wallet_id):
+        wallet = get_object_or_404(Wallet, id=wallet_id)
+        self.check_object_permissions(self.request, wallet)
+        return wallet
 
     def get(self, request, wallet_id):
-        wallet = get_object_or_404(Wallet, id=wallet_id)
+        wallet = self.get_object(wallet_id)
 
         serializer = WalletSerializer(wallet)
 
@@ -50,7 +57,7 @@ class WalletDetailView(APIView):
         """Método PATCH para alterar o limite de uma wallet."""
         limit = request.data['limit']
 
-        wallet = get_object_or_404(Wallet, id=wallet_id)
+        wallet = self.get_object(wallet_id)
 
         serializer = WalletSerializer(wallet)
 
@@ -77,7 +84,7 @@ class WalletDetailView(APIView):
     def delete(self, request, wallet_id):
         """Método DELETE para deletar uma wallet."""
 
-        wallet = get_object_or_404(Wallet, id=wallet_id)
+        wallet = self.get_object(wallet_id)
 
         wallet_cards = wallet.cards.all()
 
@@ -92,7 +99,7 @@ class WalletDetailView(APIView):
     def post(self, request, wallet_id):
         """Método POST para efetuar uma compra com a wallet."""
 
-        wallet = get_object_or_404(Wallet, id=wallet_id)
+        wallet = self.get_object(wallet_id)
 
         wallet_cards = wallet.cards.all().order_by('-due_date', 'limit')
 
@@ -143,11 +150,17 @@ class WalletDetailView(APIView):
 
 
 class WalletCardsView(APIView):
+    permission_classes = [IsAuthenticated & WalletPermission]
+
+    def get_object(self, wallet_id):
+        wallet = get_object_or_404(Wallet, id=wallet_id)
+        self.check_object_permissions(self.request, wallet)
+        return wallet
 
     def get(self, request, wallet_id):
         """Método GET para retornar todos os cartões de uma wallet."""
 
-        wallet = get_object_or_404(Wallet, id=wallet_id)
+        wallet = self.get_object(wallet_id)
 
         cards = wallet.cards.all()
 
@@ -158,7 +171,7 @@ class WalletCardsView(APIView):
     def post(self, request, wallet_id):
         """Método POST para adicionar um cartão à wallet."""
 
-        wallet = get_object_or_404(Wallet, id=wallet_id)
+        wallet = self.get_object(wallet_id)
 
         card_id = request.data['card_id']
 
@@ -173,7 +186,7 @@ class WalletCardsView(APIView):
     def delete(self, request, wallet_id):
         """Método DELETE para remover um cartão da wallet."""
 
-        wallet = get_object_or_404(Wallet, id=wallet_id)
+        wallet = self.get_object(wallet_id)
 
         card_id = request.data['card_id']
 
