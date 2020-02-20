@@ -47,6 +47,7 @@ class WalletDetailView(APIView):
         return wallet
 
     def get(self, request, wallet_id):
+        """Método GET para obter detalhes de uma wallet."""
         wallet = self.get_object(wallet_id)
 
         serializer = WalletSerializer(wallet)
