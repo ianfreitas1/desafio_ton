@@ -11,6 +11,8 @@ from .serializers import CardSerializer
 class CardView(APIView):
 
     def get(self, request):
+        """Método GET para obter todos os cartões do usuário."""
+
         cards = Card.objects.filter(user=request.user)
 
         serializer = CardSerializer(cards, many=True)
@@ -18,6 +20,8 @@ class CardView(APIView):
         return Response({'cards': serializer.data})
 
     def post(self, request):
+        """Método POST para criar um novo cartão."""
+
         data = request.data
         data['user'] = request.user.id
 
@@ -38,6 +42,8 @@ class CardView(APIView):
 class CardDetailView(APIView):
 
     def get(self, request, card_id):
+        """Método GET para obter os detalhes de um cartão."""
+
         card = get_object_or_404(Card, id=card_id)
 
         serializer = CardSerializer(card)
@@ -45,6 +51,8 @@ class CardDetailView(APIView):
         return Response(serializer.data)
 
     def put(self, request, card_id):
+        """Método PUT para editar os dados do cartão."""
+
         data = request.data
 
         card = get_object_or_404(Card, id=card_id)
@@ -71,6 +79,8 @@ class CardDetailView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, card_id):
+        """Método DELETE para deletar um cartão."""
+
         card = get_object_or_404(Card, id=card_id)
 
         if card.wallet is not None:
@@ -80,3 +90,18 @@ class CardDetailView(APIView):
         card.delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def post(self, request, card_id):
+        """Método POST para pagar uma conta e liberar crédito."""
+
+        card = get_object_or_404(Card, id=card_id)
+
+        payment_value = request.data['payment_value']
+
+        card.available_credit += payment_value
+
+        card.save()
+
+        serializer = CardSerializer(card)
+
+        return Response({'detail': _('Paid bill and freed credit.'), 'card': serializer.data})
