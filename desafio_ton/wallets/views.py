@@ -89,6 +89,58 @@ class WalletDetailView(APIView):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    def post(self, request, wallet_id):
+        """Método POST para efetuar uma compra com a wallet."""
+
+        wallet = get_object_or_404(Wallet, id=wallet_id)
+
+        wallet_cards = wallet.cards.all().order_by('-due_date', 'limit')
+
+        order_value = request.data['order_value']
+
+        card_credits = [card.available_credit for card in wallet_cards]
+        credit_sum = sum(card_credits)
+
+        if credit_sum < order_value:
+            return Response({'detail': _('No credit available to pay order.')}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Essa lista irá conter os cartões utilizados na compra, marcados por uma
+        # dicionário contendo o cartão e o valor pago por esse cartão
+        cards_used = []
+
+        index = 0
+        while order_value > 0:
+            card = wallet_cards[index]
+
+            if card.available_credit > 0:
+
+                if card.available_credit >= order_value:
+                    paid_value = order_value
+                    card.available_credit -= order_value
+                    card.save()
+
+                    serializer = CardSerializer(card)
+
+                    cards_used.append(
+                        {'card': serializer.data, 'paid_value': paid_value})
+
+                    order_value = 0
+
+                else:
+                    order_value -= card.available_credit
+                    paid_value = card.available_credit
+                    card.available_credit = 0
+                    card.save()
+
+                    serializer = CardSerializer(card)
+
+                    cards_used.append(
+                        {'card': serializer.data, 'paid_value': paid_value})
+
+            index += 1
+
+        return Response({'cards_used': cards_used}, status=status.HTTP_200_OK)
+
 
 class WalletCardsView(APIView):
 
